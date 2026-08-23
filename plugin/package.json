@@ -1,0 +1,15 @@
+{
+  "name": "songloft-plugin-bluez",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "songloft-plugin build",
+    "dev": "songloft-plugin dev",
+    "validate": "node scripts/validate.mjs"
+  },
+  "devDependencies": {
+    "@songloft/plugin-builder": "^2.3.3",
+    "@songloft/plugin-sdk": "^2.3.3",
+    "typescript": "^5.9.3"
+  }
+}

@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
+    <meta name="theme-color" content="#07111f">
+    <title>蓝牙音箱管理</title>
+    <link rel="stylesheet" href="/static/styles.css">
+  </head>
+  <body>
+    <div class="ambient ambient-one"></div>
+    <div class="ambient ambient-two"></div>
+    <main class="shell">
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">ᛒ</div>
+          <div>
+            <p class="eyebrow">BLUEZ CONTROL</p>
+            <h1>蓝牙音箱管理</h1>
+          </div>
+        </div>
+        <div id="serviceState" class="service-state"><span></span>正在连接 BlueZ</div>
+      </header>
+
+      <section class="hero panel">
+        <div>
+          <p class="eyebrow">HOST ADAPTER</p>
+          <h2 id="adapterName">读取蓝牙适配器…</h2>
+          <p id="adapterMeta" class="muted">请稍候</p>
+        </div>
+        <div class="hero-actions">
+          <button id="scanButton" class="button primary" type="button" disabled>
+            <span class="scan-symbol" aria-hidden="true"></span>
+            <span id="scanButtonText">开始扫描</span>
+          </button>
+          <button id="refreshButton" class="button ghost" type="button">刷新</button>
+        </div>
+        <div id="scanProgress" class="scan-progress" hidden><span></span></div>
+      </section>
+
+      <section class="toolbar">
+        <div>
+          <h2>设备</h2>
+          <p id="deviceSummary" class="muted">等待扫描结果</p>
+        </div>
+        <label class="switch-row">
+          <input id="audioOnly" type="checkbox" checked>
+          <span class="switch"><span></span></span>
+          优先显示音频设备
+        </label>
+      </section>
+
+      <section id="emptyState" class="empty panel">
+        <div class="empty-icon" aria-hidden="true">⌁</div>
+        <h3>还没有发现设备</h3>
+        <p>让音箱进入配对模式，然后点击“开始扫描”。扫描期间请让手机和电脑暂时断开该音箱。</p>
+      </section>
+
+      <section id="deviceList" class="device-grid" aria-live="polite"></section>
+
+      <footer>
+        <p>本面板只调用宿主机 BlueZ；不会启动蓝牙服务，也不会修改 PulseAudio、MPD 或 Songloft。</p>
+      </footer>
+    </main>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script src="/static/app.js" defer></script>
+  </body>
+</html>

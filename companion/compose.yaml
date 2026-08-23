@@ -1,0 +1,40 @@
+name: songloft-bluez-control
+
+services:
+  companion:
+    image: "${BLUEZ_IMAGE:-dlaq/songloft-bluez-control:latest}"
+    container_name: songloft-bluez-companion
+    restart: unless-stopped
+    # OpenWrt's system D-Bus policy rejects non-root BlueZ management clients.
+    # Capabilities remain dropped and the root filesystem remains read-only.
+    user: "0:0"
+    environment:
+      PANEL_USERNAME: "${PANEL_USERNAME:-admin}"
+      PANEL_PASSWORD: "${PANEL_PASSWORD:-}"
+      BLUEZ_ADAPTER: "${BLUEZ_ADAPTER:-hci0}"
+      SCAN_SECONDS: "${SCAN_SECONDS:-20}"
+      HOST: "0.0.0.0"
+      PORT: "8080"
+    ports:
+      - "${WEB_BIND:-127.0.0.1}:${WEB_PORT:-8088}:8080"
+    volumes:
+      - /run/dbus/system_bus_socket:/run/dbus/system_bus_socket
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777,noexec,nosuid,nodev
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 64
+    mem_limit: 128m
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/healthz', timeout=3).read()"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

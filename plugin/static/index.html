@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>蓝牙音箱管理</title>
+  <link rel="icon" href="static/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="static/styles.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <img src="static/icon.svg" alt="" width="48" height="48">
+        <div>
+          <span class="eyebrow">BLUEZ CONTROL</span>
+          <h1>蓝牙音箱管理</h1>
+        </div>
+      </div>
+      <div class="top-actions">
+        <span id="serviceState" class="service-state"><i></i>正在连接</span>
+        <button id="settingsButton" class="btn btn-quiet" type="button">设置</button>
+      </div>
+    </header>
+
+    <section class="adapter-card card" aria-labelledby="adapterTitle">
+      <div>
+        <span class="eyebrow">HOST ADAPTER</span>
+        <h2 id="adapterTitle">正在读取 BlueZ</h2>
+        <p id="adapterMeta">请稍候…</p>
+      </div>
+      <div class="adapter-actions">
+        <button id="scanButton" class="btn btn-primary" type="button" disabled>开始扫描</button>
+        <button id="refreshButton" class="btn btn-quiet" type="button">刷新</button>
+      </div>
+    </section>
+
+    <section class="devices-section">
+      <div class="section-head">
+        <div>
+          <h2>设备</h2>
+          <p id="deviceSummary">发现 0 台 · 音频 0 台 · 已连接 0 台</p>
+        </div>
+        <label class="switch-row">
+          <input id="audioOnly" type="checkbox" checked>
+          <span class="switch" aria-hidden="true"></span>
+          <span>优先显示音频设备</span>
+        </label>
+      </div>
+
+      <div id="deviceList" class="device-list card" aria-live="polite">
+        <div class="empty-state">
+          <div class="empty-icon">⌁</div>
+          <h3>还没有发现设备</h3>
+          <p>让音箱进入配对模式，然后点击“开始扫描”。扫描期间请让手机和电脑暂时断开该音箱。</p>
+        </div>
+      </div>
+    </section>
+
+    <p class="footnote">本插件只通过本机 companion 调用宿主机 BlueZ，不启动第二套蓝牙服务，也不修改 PulseAudio、MPD 或 Songloft 音频配置。</p>
+  </main>
+
+  <dialog id="settingsDialog" class="settings-dialog">
+    <form id="settingsForm" method="dialog">
+      <div class="dialog-head">
+        <div>
+          <span class="eyebrow">COMPANION</span>
+          <h2>连接设置</h2>
+        </div>
+        <button id="closeSettings" class="icon-button" type="button" aria-label="关闭">×</button>
+      </div>
+      <p class="dialog-help">插件只允许访问本机 <code>http://127.0.0.1:8088</code>。凭据保存在 Songloft 插件存储中，不会发送到浏览器以外的地址。</p>
+      <label>
+        <span>用户名</span>
+        <input id="companionUsername" name="username" autocomplete="username" maxlength="64" required>
+      </label>
+      <label>
+        <span>密码</span>
+        <input id="companionPassword" name="password" type="password" autocomplete="current-password" minlength="8" maxlength="256" placeholder="留空表示保留现有密码">
+      </label>
+      <p id="settingsError" class="form-error" role="alert"></p>
+      <div class="dialog-actions">
+        <button id="cancelSettings" class="btn btn-quiet" type="button">取消</button>
+        <button id="saveSettings" class="btn btn-primary" type="submit">验证并保存</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="static/app.js" defer></script>
+</body>
+</html>

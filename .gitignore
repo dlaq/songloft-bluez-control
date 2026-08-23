@@ -1,0 +1,17 @@
+.idea/
+.vscode/
+*.log
+
+plugin/node_modules/
+plugin/dist/
+plugin/output/
+plugin/.playwright-cli/
+plugin/.songloft-dev.json
+
+companion/.env
+companion/.venv/
+companion/__pycache__/
+companion/**/__pycache__/
+companion/*.pyc
+companion/.pytest_cache/
+

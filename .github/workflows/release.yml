@@ -1,0 +1,72 @@
+name: Release Songloft Plugin
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: plugin/package-lock.json
+
+      - name: Verify release version
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $Manifest = Get-Content -LiteralPath 'plugin/plugin.json' -Encoding UTF8 | ConvertFrom-Json
+          $ExpectedTag = "v$($Manifest.version)"
+          if ($env:GITHUB_REF_NAME -ne $ExpectedTag) {
+            throw "Tag $($env:GITHUB_REF_NAME) does not match plugin version $ExpectedTag"
+          }
+
+      - name: Build and validate plugin
+        working-directory: plugin
+        run: |
+          $ErrorActionPreference = 'Stop'
+          npm ci
+          npx tsc --noEmit
+          npm run build
+          npm run validate
+
+      - name: Create checksum
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $Package = 'plugin/dist/bluez-control.jsplugin.zip'
+          $Hash = (Get-FileHash -LiteralPath $Package -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$Hash  bluez-control.jsplugin.zip" | Set-Content -LiteralPath "$Package.sha256" -Encoding UTF8
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: songloft-bluez-control-${{ github.ref_name }}
+          path: |
+            plugin/dist/bluez-control.jsplugin.zip
+            plugin/dist/bluez-control.jsplugin.zip.sha256
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          name: Songloft BlueZ Control ${{ github.ref_name }}
+          generate_release_notes: true
+          make_latest: true
+          files: |
+            plugin/dist/bluez-control.jsplugin.zip
+            plugin/dist/bluez-control.jsplugin.zip.sha256
+
