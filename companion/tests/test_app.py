@@ -1,9 +1,11 @@
 import base64
+import os
 import unittest
+from unittest.mock import patch
 
 from aiohttp.test_utils import AioHTTPTestCase
 
-from app import create_app
+from app import create_app, load_config
 
 
 class FakeBluez:
@@ -108,6 +110,31 @@ class PanelTests(AioHTTPTestCase):
         )
         self.assertEqual(400, response.status)
         self.assertEqual([], self.fake.actions)
+
+
+class ConfigurationTests(unittest.TestCase):
+    def test_short_password_is_rejected_by_default(self):
+        with patch.dict(os.environ, {"PANEL_PASSWORD": "legacy88"}, clear=True):
+            with self.assertRaisesRegex(RuntimeError, "至少 12 位"):
+                load_config()
+
+    def test_explicit_legacy_mode_accepts_existing_eight_character_password(self):
+        with patch.dict(
+            os.environ,
+            {"PANEL_PASSWORD": "legacy88", "ALLOW_LEGACY_PASSWORD": "true"},
+            clear=True,
+        ):
+            config = load_config()
+        self.assertEqual("legacy88", config["password"])
+
+    def test_legacy_mode_still_rejects_known_weak_password(self):
+        with patch.dict(
+            os.environ,
+            {"PANEL_PASSWORD": "password", "ALLOW_LEGACY_PASSWORD": "true"},
+            clear=True,
+        ):
+            with self.assertRaisesRegex(RuntimeError, "非默认密码"):
+                load_config()
 
 
 if __name__ == "__main__":

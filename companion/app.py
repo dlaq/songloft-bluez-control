@@ -450,13 +450,24 @@ def create_app(bluez: BluezManager | None = None, config: dict[str, Any] | None 
 def load_config() -> dict[str, Any]:
     username = os.getenv("PANEL_USERNAME", "admin").strip()
     password = os.getenv("PANEL_PASSWORD", "")
+    allow_legacy_password = os.getenv("ALLOW_LEGACY_PASSWORD", "false").strip().casefold() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
     if not username:
         raise RuntimeError("PANEL_USERNAME 不能为空")
     if ":" in username:
         raise RuntimeError("PANEL_USERNAME 不能包含冒号")
     weak_values = {"", "changeme", "change-me", "password", "请替换为至少12位随机密码"}
-    if len(password) < 12 or password.casefold() in weak_values:
+    minimum_password_length = 8 if allow_legacy_password else 12
+    if len(password) < minimum_password_length or password.casefold() in weak_values:
+        if allow_legacy_password:
+            raise RuntimeError("兼容模式下 PANEL_PASSWORD 也必须设置为至少 8 位的非默认密码")
         raise RuntimeError("PANEL_PASSWORD 必须设置为至少 12 位的非默认密码")
+    if allow_legacy_password and len(password) < 12:
+        logging.warning("ALLOW_LEGACY_PASSWORD 已启用；请尽快把 PANEL_PASSWORD 轮换为至少 12 位")
     try:
         scan_seconds = int(os.getenv("SCAN_SECONDS", "20"))
     except ValueError as exc:

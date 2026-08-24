@@ -58,14 +58,14 @@ docker.io/dlaq/songloft-bluez-control:latest
 需要固定版本时，在 `.env` 中设置：
 
 ```dotenv
-BLUEZ_IMAGE=dlaq/songloft-bluez-control:1.1.0
+BLUEZ_IMAGE=dlaq/songloft-bluez-control:1.1.1
 ```
 
 正式标签包括：
 
 ```text
-dlaq/songloft-bluez-control:v1.1.0
-dlaq/songloft-bluez-control:1.1.0
+dlaq/songloft-bluez-control:v1.1.1
+dlaq/songloft-bluez-control:1.1.1
 dlaq/songloft-bluez-control:latest
 ```
 
@@ -112,6 +112,8 @@ Songloft 插件页面
 - companion 不使用 `privileged`，不挂载 `/dev` 或 `/var/lib/bluetooth`。
 - companion 根文件系统只读、删除全部 capabilities，并启用 `no-new-privileges`。
 - 配对 Agent 只在用户主动配对指定 MAC 后短时授权该设备。
+
+既有部署若暂时仍使用 8-11 位密码，可以显式设置 `ALLOW_LEGACY_PASSWORD=true` 完成迁移；新安装必须保持 `false` 并使用至少 12 位密码。兼容模式不会接受 `password` 等已知弱口令。
 
 ## 开发与验证
 

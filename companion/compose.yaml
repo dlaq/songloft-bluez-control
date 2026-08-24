@@ -12,6 +12,7 @@ services:
     environment:
       PANEL_USERNAME: "${PANEL_USERNAME:-admin}"
       PANEL_PASSWORD: "${PANEL_PASSWORD:-}"
+      ALLOW_LEGACY_PASSWORD: "${ALLOW_LEGACY_PASSWORD:-false}"
       BLUEZ_ADAPTER: "${BLUEZ_ADAPTER:-hci0}"
       SCAN_SECONDS: "${SCAN_SECONDS:-20}"
       HOST: "0.0.0.0"
