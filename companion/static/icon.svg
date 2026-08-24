@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="蓝牙音箱管理">
+  <defs>
+    <linearGradient id="g" x1="8" y1="8" x2="56" y2="56" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#53e4d2"/>
+      <stop offset="1" stop-color="#63b8ff"/>
+    </linearGradient>
+  </defs>
+  <rect x="5" y="5" width="54" height="54" rx="17" fill="url(#g)"/>
+  <path d="M29 15l14 12-9 7 9 7-14 12V38l-8 7v-8l7-6-7-6v-8l8 7V15zm5 9v6l4-3-4-3zm0 14v6l4-3-4-3z" fill="#071a2b"/>
+</svg>

@@ -3,6 +3,7 @@ name: songloft-bluez-control
 services:
   companion:
     image: "${BLUEZ_IMAGE:-dlaq/songloft-bluez-control:latest}"
+    pull_policy: always
     container_name: songloft-bluez-companion
     restart: unless-stopped
     # OpenWrt's system D-Bus policy rejects non-root BlueZ management clients.

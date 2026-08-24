@@ -1,6 +1,6 @@
-# Songloft BlueZ Companion
+# BlueZ Web Panel and Songloft Companion
 
-一个面向无头 Linux / iStoreOS 的轻量蓝牙音箱管理面板。它只通过宿主机 system D-Bus 调用现有 BlueZ，提供：
+一个面向无头 Linux / iStoreOS 的轻量蓝牙音箱管理面板。它既可作为独立网页，也可作为 Songloft 插件的 companion。它只通过宿主机 system D-Bus 调用现有 BlueZ，提供：
 
 - 扫描附近蓝牙设备（默认 20 秒后自动停止）
 - 配对并信任音箱
@@ -34,7 +34,13 @@ ls -l /run/dbus/system_bus_socket
 /opt/1panel/docker/compose/songloft-bluez-control
 ```
 
-下载本目录的 `compose.yaml` 和 `.env.example`。将 `.env.example` 复制为 `.env`，修改：
+下载本目录的 `compose.yaml`，根据使用模式选择环境模板：
+
+- 独立网页：把 `.env.web.example` 复制为 `.env`，监听可信 LAN。
+- Songloft 插件：把 `.env.plugin.example` 复制为 `.env`，仅监听 `127.0.0.1`。
+- `.env.example` 与插件模式相同，作为安全默认值保留。
+
+插件模式示例：
 
 ```dotenv
 PANEL_USERNAME=bluezadmin
@@ -59,16 +65,17 @@ SCAN_SECONDS=20
 
 之后该服务的启动、停止、重启、重建和日志都在这个 1Panel 编排中完成，不要另行使用 `docker run` 创建第二份容器。
 
-### 3. 访问
+### 3. 选择访问方式
 
-作为 Songloft companion 使用时保持 `WEB_BIND=127.0.0.1`，不要直接从局域网访问 8088。
-只有确实需要独立网页时才改为 LAN 地址并打开：
+独立网页模式使用 `WEB_BIND=0.0.0.0`，然后打开：
 
 ```text
 http://iStoreOS地址:8088
 ```
 
-例如：`http://192.168.25.104:8088`。浏览器会弹出登录框，使用 `.env` 中的用户名和密码。
+例如：`http://192.168.25.104:8088`。浏览器会弹出登录框，使用 `.env` 中的用户名和密码。网页可独立完成扫描、配对、信任、连接、断开和移除。
+
+Songloft 插件模式保持 `WEB_BIND=127.0.0.1`，不要直接从局域网访问 8088；在 Songloft 中安装 Release 提供的插件包，通过插件页面操作。
 
 HTTP Basic Auth 只编码、不加密密码。若使用独立网页且局域网并非完全可信，应在 1Panel 中建立 HTTPS 反向代理。若直接使用端口，只对 LAN 区域放行 TCP 8088，绝不要暴露到 WAN。
 
@@ -78,7 +85,7 @@ HTTP Basic Auth 只编码、不加密密码。若使用独立网页且局域网�
 2. 点击「开始扫描」。
 3. 找到音箱，点击「配对并信任」。
 4. 配对完成后点击「连接」。
-5. 回到 Songloft，保持输出为 `PulseAudio · 蓝牙 / 桌面音频`。
+5. 若需要音频播放，再在 PulseAudio/Songloft 中选择对应蓝牙输出。
 
 现代音箱通常使用 Just Works 配对。本面板刻意不自动猜测传统 PIN；需要输入 `0000`、`1234` 或键盘确认码的老设备，应继续用 `bluetoothctl` 完成首次配对。
 

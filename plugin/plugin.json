@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/songloft-org/plugin-toolchain/main/schemas/plugin.schema.json",
   "name": "蓝牙音箱管理",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "在 Songloft 内扫描、配对、信任和连接宿主机 BlueZ 蓝牙音箱",
   "author": "dlaq",
   "license": "MIT",

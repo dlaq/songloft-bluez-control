@@ -58,6 +58,31 @@ class PanelTests(AioHTTPTestCase):
         self.assertEqual(401, response.status)
         self.assertIn("Basic", response.headers["WWW-Authenticate"])
 
+    async def test_web_page_requires_authentication(self):
+        response = await self.client.get("/")
+        self.assertEqual(401, response.status)
+        self.assertIn("Basic", response.headers["WWW-Authenticate"])
+
+    async def test_web_page_renders_with_authentication(self):
+        response = await self.client.get("/", headers=self.auth)
+        self.assertEqual(200, response.status)
+        self.assertIn("text/html", response.headers["Content-Type"])
+        body = await response.text()
+        self.assertIn("蓝牙音箱管理", body)
+        self.assertIn('id="scanButton"', body)
+        self.assertIn('/static/app.js', body)
+
+    async def test_web_assets_are_served_with_authentication(self):
+        response = await self.client.get("/static/app.js", headers=self.auth)
+        self.assertEqual(200, response.status)
+        body = await response.text()
+        self.assertIn("/api/status", body)
+        self.assertIn("X-Bluez-Panel", body)
+
+        icon = await self.client.get("/static/icon.svg", headers=self.auth)
+        self.assertEqual(200, icon.status)
+        self.assertIn("image/svg+xml", icon.headers["Content-Type"])
+
     async def test_status_with_authentication(self):
         response = await self.client.get("/api/status", headers=self.auth)
         self.assertEqual(200, response.status)

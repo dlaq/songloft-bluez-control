@@ -1,6 +1,7 @@
 .idea/
 .vscode/
 *.log
+output/
 
 plugin/node_modules/
 plugin/dist/
@@ -14,4 +15,3 @@ companion/__pycache__/
 companion/**/__pycache__/
 companion/*.pyc
 companion/.pytest_cache/
-

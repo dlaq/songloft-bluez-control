@@ -1,0 +1,100 @@
+name: Publish Docker Image
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Existing source tag to publish, for example v1.1.0
+        required: true
+        type: string
+
+concurrency:
+  group: docker-${{ github.ref_name }}-${{ inputs.version }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve version
+        id: version
+        shell: pwsh
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $Version = if ($env:EVENT_NAME -eq 'push') { $env:REF_NAME } else { $env:INPUT_VERSION }
+          if ($Version -notmatch '^v[0-9]+\.[0-9]+\.[0-9]+(?:[-.][0-9A-Za-z.-]+)?$') {
+            throw "Invalid version: $Version"
+          }
+          "tag=$Version" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          "plain=$($Version.Substring(1))" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          "stable=$($Version -notmatch '-')".ToLowerInvariant() | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+
+      - name: Checkout tagged source
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ steps.version.outputs.tag }}
+
+      - name: Verify source version
+        shell: pwsh
+        env:
+          EXPECTED_VERSION: ${{ steps.version.outputs.plain }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $Manifest = Get-Content -LiteralPath 'plugin/plugin.json' -Encoding UTF8 | ConvertFrom-Json
+          if ($Manifest.version -ne $env:EXPECTED_VERSION) {
+            throw "Plugin version $($Manifest.version) does not match requested image version $($env:EXPECTED_VERSION)"
+          }
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.DLAQ }}
+
+      - name: Generate image metadata
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ github.repository_owner }}/songloft-bluez-control
+          tags: |
+            type=raw,value=${{ steps.version.outputs.tag }}
+            type=raw,value=${{ steps.version.outputs.plain }}
+            type=raw,value=latest,enable=${{ steps.version.outputs.stable == 'true' }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.title=Songloft BlueZ Control
+            org.opencontainers.image.description=Standalone BlueZ web panel and Songloft plugin companion
+            org.opencontainers.image.licenses=MIT
+
+      - name: Build and push image
+        uses: docker/build-push-action@v7
+        with:
+          context: companion
+          file: companion/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=songloft-bluez-control
+          cache-to: type=gha,mode=max,scope=songloft-bluez-control
+
+      - name: Verify published manifest
+        shell: pwsh
+        env:
+          IMAGE: ${{ github.repository_owner }}/songloft-bluez-control:${{ steps.version.outputs.plain }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          docker buildx imagetools inspect $env:IMAGE
