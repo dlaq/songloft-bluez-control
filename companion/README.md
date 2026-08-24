@@ -1,6 +1,6 @@
 # BlueZ Web Panel and Songloft Companion
 
-一个面向无头 Linux / iStoreOS 的轻量蓝牙音箱管理面板。它既可作为独立网页，也可作为 Songloft 插件的 companion。它只通过宿主机 system D-Bus 调用现有 BlueZ，提供：
+一个面向无头 Linux / iStoreOS 的轻量蓝牙音箱管理面板。一个容器可同时提供独立网页和 Songloft 插件 companion。它只通过宿主机 system D-Bus 调用现有 BlueZ，提供：
 
 - 扫描附近蓝牙设备（默认 20 秒后自动停止）
 - 配对并信任音箱
@@ -34,27 +34,25 @@ ls -l /run/dbus/system_bus_socket
 /opt/1panel/docker/compose/songloft-bluez-control
 ```
 
-下载本目录的 `compose.yaml`，根据使用模式选择环境模板：
+下载本目录的 `compose.yaml`，使用双端环境模板：
 
-- 独立网页：把 `.env.web.example` 复制为 `.env`，监听可信 LAN。
-- Songloft 插件：把 `.env.plugin.example` 复制为 `.env`，仅监听 `127.0.0.1`。
-- `.env.example` 与插件模式相同，作为安全默认值保留。
+- 默认双端：把 `.env.example` 复制为 `.env`，网页监听可信 LAN，同机插件访问回环地址。
+- `.env.web.example` 与默认双端配置相同。
+- 只有明确不需要网页入口时，才使用 `.env.plugin.example` 收紧为仅监听 `127.0.0.1`。
 
-插件模式示例：
+双端部署示例：
 
 ```dotenv
 PANEL_USERNAME=bluezadmin
-PANEL_PASSWORD=这里换成至少12位随机密码
-WEB_BIND=127.0.0.1
+PANEL_PASSWORD=这里换成管理密码
+WEB_BIND=0.0.0.0
 WEB_PORT=8088
 BLUEZ_IMAGE=dlaq/songloft-bluez-control:latest
 BLUEZ_ADAPTER=hci0
 SCAN_SECONDS=20
 ```
 
-密码不要保留示例值，也不要把真实 `.env` 上传到代码仓库。
-
-新安装必须使用至少 12 位密码。已有系统若暂时无法同步更新 Songloft 中保存的凭据，可短期设置 `ALLOW_LEGACY_PASSWORD=true` 兼容 8-11 位旧密码；完成密码轮换后应立即恢复为 `false`。
+密码不限制长度，但不能为空或保留示例占位值，也不要把真实 `.env` 上传到代码仓库。
 
 ### 2. 在 1Panel 创建编排
 
@@ -67,17 +65,15 @@ SCAN_SECONDS=20
 
 之后该服务的启动、停止、重启、重建和日志都在这个 1Panel 编排中完成，不要另行使用 `docker run` 创建第二份容器。
 
-### 3. 选择访问方式
+### 3. 同时使用两个入口
 
-独立网页模式使用 `WEB_BIND=0.0.0.0`，然后打开：
+保持 `WEB_BIND=0.0.0.0`，网页打开：
 
 ```text
 http://iStoreOS地址:8088
 ```
 
-例如：`http://192.168.25.104:8088`。浏览器会弹出登录框，使用 `.env` 中的用户名和密码。网页可独立完成扫描、配对、信任、连接、断开和移除。
-
-Songloft 插件模式保持 `WEB_BIND=127.0.0.1`，不要直接从局域网访问 8088；在 Songloft 中安装 Release 提供的插件包，通过插件页面操作。
+例如：`http://192.168.25.104:8088`。浏览器会弹出登录框，使用 `.env` 中的用户名和密码。与此同时，同机 host 网络模式的 Songloft 插件通过 `http://127.0.0.1:8088` 使用同一套 API 和凭据，无需再启动第二个容器。
 
 HTTP Basic Auth 只编码、不加密密码。若使用独立网页且局域网并非完全可信，应在 1Panel 中建立 HTTPS 反向代理。若直接使用端口，只对 LAN 区域放行 TCP 8088，绝不要暴露到 WAN。
 
@@ -106,7 +102,7 @@ HTTP Basic Auth 只编码、不加密密码。若使用独立网页且局域网�
 
 在 1Panel 的编排详情查看容器日志。常见情况：
 
-- `PANEL_PASSWORD 必须设置...`：`.env` 未创建、密码过短或仍是示例值。
+- `PANEL_PASSWORD 不能为空或使用示例占位值`：`.env` 未创建、密码为空或仍是示例值。
 - `找不到宿主机 BlueZ 服务`：确认 `/run/dbus/system_bus_socket` 存在且 compose 挂载未被删除。
 - `蓝牙控制器未开启`：宿主机执行 `bluetoothctl power on`，然后刷新页面。
 - 扫描不到音箱：让音箱重新进入快速闪灯的配对模式，暂时关闭手机/电脑蓝牙后再扫。

@@ -113,27 +113,19 @@ class PanelTests(AioHTTPTestCase):
 
 
 class ConfigurationTests(unittest.TestCase):
-    def test_short_password_is_rejected_by_default(self):
-        with patch.dict(os.environ, {"PANEL_PASSWORD": "legacy88"}, clear=True):
-            with self.assertRaisesRegex(RuntimeError, "至少 12 位"):
+    def test_non_empty_password_has_no_length_requirement(self):
+        with patch.dict(os.environ, {"PANEL_PASSWORD": "x"}, clear=True):
+            config = load_config()
+        self.assertEqual("x", config["password"])
+
+    def test_empty_password_is_rejected(self):
+        with patch.dict(os.environ, {"PANEL_PASSWORD": ""}, clear=True):
+            with self.assertRaisesRegex(RuntimeError, "不能为空"):
                 load_config()
 
-    def test_explicit_legacy_mode_accepts_existing_eight_character_password(self):
-        with patch.dict(
-            os.environ,
-            {"PANEL_PASSWORD": "legacy88", "ALLOW_LEGACY_PASSWORD": "true"},
-            clear=True,
-        ):
-            config = load_config()
-        self.assertEqual("legacy88", config["password"])
-
-    def test_legacy_mode_still_rejects_known_weak_password(self):
-        with patch.dict(
-            os.environ,
-            {"PANEL_PASSWORD": "password", "ALLOW_LEGACY_PASSWORD": "true"},
-            clear=True,
-        ):
-            with self.assertRaisesRegex(RuntimeError, "非默认密码"):
+    def test_example_placeholder_is_rejected(self):
+        with patch.dict(os.environ, {"PANEL_PASSWORD": "请替换为管理密码"}, clear=True):
+            with self.assertRaisesRegex(RuntimeError, "示例占位值"):
                 load_config()
 
 
