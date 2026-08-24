@@ -2,6 +2,7 @@
 .vscode/
 *.log
 output/
+.playwright-cli/
 
 plugin/node_modules/
 plugin/dist/
